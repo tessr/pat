@@ -101,14 +101,24 @@ func New() *PatternServeMux {
 // ServeHTTP matches r.URL.Path against its routing table using the rules
 // described above.
 func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var h http.Handler
+	var b int
+	var par url.Values
 	for _, ph := range p.handlers[r.Method] {
 		if params, ok := ph.try(r.URL.Path); ok {
-			if len(params) > 0 {
-				r.URL.RawQuery = url.Values(params).Encode() + "&" + r.URL.RawQuery
+			if len(ph.pat) > b {
+				h = ph
+				b = len(ph.pat)
+				par = params
 			}
-			ph.ServeHTTP(w, r)
-			return
 		}
+	}
+	if h != nil {
+		if len(par) > 0 {
+			r.URL.RawQuery = url.Values(par).Encode() + "&" + r.URL.RawQuery
+		}
+		h.ServeHTTP(w, r)
+		return
 	}
 
 	allowed := make([]string, 0, len(p.handlers))
@@ -217,7 +227,7 @@ func (ph *patHandler) try(path string) (url.Values, bool) {
 	for i < len(path) {
 		switch {
 		case j >= len(ph.pat):
-			if ph.pat != "/" && len(ph.pat) > 0 && ph.pat[len(ph.pat)-1] == '/' {
+			if len(ph.pat) > 0 && ph.pat[len(ph.pat)-1] == '/' {
 				return p, true
 			}
 			return nil, false
