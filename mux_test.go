@@ -16,7 +16,7 @@ func TestPatMatch(t *testing.T) {
 	assert.Equal(t, true, ok)
 
 	params, ok = (&patHandler{"/", nil}).try("/wrong_url")
-	assert.Equal(t, false, ok)
+	assert.Equal(t, true, ok)
 
 	params, ok = (&patHandler{"/foo/:name", nil}).try("/foo/bar")
 	assert.Equal(t, true, ok)

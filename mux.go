@@ -217,7 +217,7 @@ func (ph *patHandler) try(path string) (url.Values, bool) {
 	for i < len(path) {
 		switch {
 		case j >= len(ph.pat):
-			if ph.pat != "/" && len(ph.pat) > 0 && ph.pat[len(ph.pat)-1] == '/' {
+			if len(ph.pat) > 0 && ph.pat[len(ph.pat)-1] == '/' {
 				return p, true
 			}
 			return nil, false
