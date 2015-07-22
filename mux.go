@@ -101,6 +101,12 @@ func New() *PatternServeMux {
 // ServeHTTP matches r.URL.Path against its routing table using the rules
 // described above.
 func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h := p.Handler(r)
+	h.ServeHTTP(w, r)
+}
+
+// Handler edits r's query parameters to include elements from the path.
+func (p *PatternServeMux) Handler(r *http.Request) http.Handler {
 	var h http.Handler
 	var b int
 	var par url.Values
@@ -117,8 +123,7 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if len(par) > 0 {
 			r.URL.RawQuery = url.Values(par).Encode() + "&" + r.URL.RawQuery
 		}
-		h.ServeHTTP(w, r)
-		return
+		return h
 	}
 
 	allowed := make([]string, 0, len(p.handlers))
@@ -135,12 +140,13 @@ func (p *PatternServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(allowed) == 0 {
-		http.NotFound(w, r)
-		return
+		return http.NotFoundHandler()
 	}
 
-	w.Header().Add("Allow", strings.Join(allowed, ", "))
-	http.Error(w, "Method Not Allowed", 405)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Allow", strings.Join(allowed, ", "))
+		http.Error(w, "Method Not Allowed", 405)
+	})
 }
 
 // Head will register a pattern with a handler for HEAD requests.
