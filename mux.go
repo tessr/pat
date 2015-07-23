@@ -113,7 +113,7 @@ func (p *PatternServeMux) Handler(r *http.Request) http.Handler {
 	for _, ph := range p.handlers[r.Method] {
 		if params, ok := ph.try(r.URL.Path); ok {
 			if len(ph.pat) > b {
-				h = ph
+				h = ph.h
 				b = len(ph.pat)
 				par = params
 			}
@@ -224,7 +224,7 @@ func Tail(pat, path string) string {
 
 type patHandler struct {
 	pat string
-	http.Handler
+	h   http.Handler
 }
 
 func (ph *patHandler) try(path string) (url.Values, bool) {
